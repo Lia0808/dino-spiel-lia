@@ -19,6 +19,8 @@
   margin: auto;
   background-image: url("https://github.com/kriscfoster/chrome-dino-game/blob/master/background.jpg?raw=true");
   background-size: cover;
+  overflow: hidden;
+  position: relative;
 }
 
 #dino {
@@ -38,16 +40,15 @@
   left: 550px;
   background-image: url("https://github.com/kriscfoster/chrome-dino-game/blob/master/rock.png?raw=true");
   background-size: cover;
-  animation: rock 1.33s infinite;
+}
+
+.rock-animation {
+  animation: rock 1.33s infinite linear;
 }
 
 @keyframes rock {
-  0% {
-    left: 550px;
-  }
-  100% {
-    left: -50px;
-  }
+  0% { left: 550px; }
+  100% { left: -50px; }
 }
 
 .jump-animation {
@@ -55,72 +56,143 @@
 }
 
 @keyframes jump {
-  0% {
-    top: 225px;
-  }
-  50% {
-    top: 75px;
-  }
-  75% {
-    top: 75px;
-  }
-  100% {
-    top: 225px;
-  }
+  0% { top: 225px; }
+  50% { top: 75px; }
+  75% { top: 75px; }
+  100% { top: 225px; }
 }
 
+button {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  font-size: 18px;
+}
+
+#explosion {
+  width: 120px;
+  height: 120px;
+  position: absolute;
+  top: 200px;
+  left: 0;
+  background-image: url("https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaTQ3Nng3c2M2N3BuN29rcG1xOTQwd2lhaTVrNjdraXNpOXF2OWJkeiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/YNTpJJToueN0fPsq7c/giphy.gif");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  display: none;
+}
+
+.explosion-animation {
+  animation: explode 0.25s forwards;
+}
+
+@keyframes explode {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
   </style>
 
   
 </head>
 <body>
-  <link rel="stylesheet" href="style.css" />
+  <h1>Dino Game</h1>
 
-    <div id="game">
-      <div id="dino"></div>
-      <div id="rock"></div>
-    </div>
-    <h1 id="score">0</h1>
-    <script src="script.js"></script>
+<button id="startButton">Start</button>
+
+<div id="game">
+  <div id="dino"></div>
+  <div id="rock"></div>
+  <div id="explosion"></div>
+</div>
+
+<h2 id="score">0</h2>
 
   <script>
-    const dino = document.getElementById("dino")
-const rock = document.getElementById("rock")
-const score = document.getElementById("score")
+    const explosion = document.getElementById("explosion");
+const dino = document.getElementById("dino");
+const rock = document.getElementById("rock");
+const score = document.getElementById("score");
+const startButton = document.getElementById("startButton");
 
+let gameRunning = false;
+let scoreCounter;
+
+/* Dino springen */
 function jump() {
-  dino.classList.add("jump-animation")
-  setTimeout(() => dino.classList.remove("jump-animation"), 500)
+
+  if (!gameRunning) return;
+
+  if (!dino.classList.contains("jump-animation")) {
+
+    dino.classList.add("jump-animation");
+
+    setTimeout(() => {
+      dino.classList.remove("jump-animation");
+    }, 500);
+
+  }
 }
 
-document.addEventListener("keypress", (event) => {
-  if (!dino.classList.contains("jump-animation")) {
-    jump()
-  }
-})
+/* Tastendruck zum Springen */
+document.addEventListener("keypress", jump);
 
-setInterval(() => {
-  score.innerText++;
-  const dinoTop = parseInt(
-    window.getComputedStyle(dino).getPropertyValue("top"),
-  )
-  const rockLeft = parseInt(
-    window.getComputedStyle(rock).getPropertyValue("left"),
-  )
-  score.innerText++
+/* Start Button Event */
+startButton.addEventListener("click", startGame);
 
-  if (rockLeft < 0) {
-    rock.style.display = "none"
-  } else {
-    rock.style.display = ""
-  }
+/* Spiel starten */
+function startGame() {
 
-  if (rockLeft < 50 && rockLeft > 0 && dinoTop > 150) {
-  // alert("You got a score of:" + score.innerText + "Play again?")
-  // location.reload();
-  }
-}, 50)
+  console.log("Start Button wurde geklickt");
 
+  if (gameRunning) return;
+
+  gameRunning = true;
+
+  rock.classList.add("rock-animation");
+
+  scoreCounter = setInterval(() => {
+
+    score.innerText++;
+
+    const dinoTop = parseInt(
+      window.getComputedStyle(dino).getPropertyValue("top")
+    );
+
+    const rockLeft = parseInt(
+      window.getComputedStyle(rock).getPropertyValue("left")
+    );
+
+    /* Kollision */
+    if (rockLeft < 50 && rockLeft > 0 && dinoTop > 150) {
+
+      gameRunning = false;
+
+      clearInterval(scoreCounter);
+
+      rock.classList.remove("rock-animation");
+
+      explosion.style.left = rockLeft + "px";
+      explosion.style.display = "block";
+      explosion.classList.add("explosion-animation");
+
+      setTimeout(() => {
+
+        alert("Game Over! Score: " + score.innerText);
+
+      }, 1000);
+
+    }
+
+  }, 50);
+
+}
   </script>
 </body>
 </html>
